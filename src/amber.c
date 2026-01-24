@@ -46,7 +46,7 @@ Amber_Result amberCreateArmature(Amber_Instance instance, const Amber_ArmatureDe
 	return ptr->vtbl->createArmature(instance, desc, armature);
 }
 
-Amber_Result amberCreatePose(Amber_Instance instance, Amber_Armature armature, Amber_Pose *pose)
+Amber_Result amberCreatePose(Amber_Instance instance, const Amber_PoseDesc *desc, Amber_Pose *pose)
 {
 	if (instance == AMBER_NULL_HANDLE)
 		return AMBER_INVALID_INSTANCE;
@@ -55,7 +55,7 @@ Amber_Result amberCreatePose(Amber_Instance instance, Amber_Armature armature, A
 	assert(ptr->vtbl);
 	assert(ptr->vtbl->createPose);
 
-	return ptr->vtbl->createPose(instance, armature, pose);
+	return ptr->vtbl->createPose(instance, desc, pose);
 }
 
 Amber_Result amberCreateSampler(Amber_Instance instance, const Amber_SamplerDesc *desc, Amber_Sampler *sampler)
@@ -178,6 +178,18 @@ Amber_Result amberUnmapPose(Amber_Instance instance, Amber_Pose pose)
 	return ptr->vtbl->unmapPose(instance, pose);
 }
 
+Amber_Result amberFetchPose(Amber_Instance instance, Amber_Sequence sequence, float time, Amber_Pose dst_pose)
+{
+	if (instance == AMBER_NULL_HANDLE)
+		return AMBER_INVALID_INSTANCE;
+
+	Amber_InstanceInternal *ptr = (Amber_InstanceInternal *)instance;
+	assert(ptr->vtbl);
+	assert(ptr->vtbl->fetchPose);
+
+	return ptr->vtbl->fetchPose(instance, sequence, time, dst_pose);
+}
+
 Amber_Result amberSamplePose(Amber_Instance instance, Amber_Sequence sequence, Amber_Sampler sampler, float time, Amber_Pose dst_pose)
 {
 	if (instance == AMBER_NULL_HANDLE)
@@ -190,43 +202,43 @@ Amber_Result amberSamplePose(Amber_Instance instance, Amber_Sequence sequence, A
 	return ptr->vtbl->samplePose(instance, sequence, sampler, time, dst_pose);
 }
 
-Amber_Result amberEvaluatePose(Amber_Instance instance, Amber_Sequence sequence, float time, Amber_Pose dst_pose)
+Amber_Result amberConvertToAdditivePose(Amber_Instance instance, Amber_Pose src_pose, Amber_Pose src_reference_pose, Amber_Pose dst_pose)
 {
 	if (instance == AMBER_NULL_HANDLE)
 		return AMBER_INVALID_INSTANCE;
 
 	Amber_InstanceInternal *ptr = (Amber_InstanceInternal *)instance;
 	assert(ptr->vtbl);
-	assert(ptr->vtbl->evaluatePose);
+	assert(ptr->vtbl->convertToAdditivePose);
 
-	return ptr->vtbl->evaluatePose(instance, sequence, time, dst_pose);
+	return ptr->vtbl->convertToAdditivePose(instance, src_pose, src_reference_pose, dst_pose);
 }
 
-Amber_Result amberInvertPose(Amber_Instance instance, Amber_Pose src_pose, Amber_Pose dst_pose)
+Amber_Result amberConvertToLocalPose(Amber_Instance instance, Amber_Pose src_pose, Amber_Pose dst_pose)
 {
 	if (instance == AMBER_NULL_HANDLE)
 		return AMBER_INVALID_INSTANCE;
 
 	Amber_InstanceInternal *ptr = (Amber_InstanceInternal *)instance;
 	assert(ptr->vtbl);
-	assert(ptr->vtbl->invertPose);
+	assert(ptr->vtbl->convertToLocalPose);
 
-	return ptr->vtbl->invertPose(instance, src_pose, dst_pose);
+	return ptr->vtbl->convertToLocalPose(instance, src_pose, dst_pose);
 }
 
-Amber_Result amberMultiplyPoses(Amber_Instance instance, Amber_Pose src_pose_a, Amber_Pose src_pose_b, Amber_Pose dst_pose)
+Amber_Result amberConvertToWorldPose(Amber_Instance instance, Amber_Pose src_pose, Amber_Pose dst_pose)
 {
 	if (instance == AMBER_NULL_HANDLE)
 		return AMBER_INVALID_INSTANCE;
 
 	Amber_InstanceInternal *ptr = (Amber_InstanceInternal *)instance;
 	assert(ptr->vtbl);
-	assert(ptr->vtbl->multiplyPoses);
+	assert(ptr->vtbl->convertToWorldPose);
 
-	return ptr->vtbl->multiplyPoses(instance, src_pose_a, src_pose_b, dst_pose);
+	return ptr->vtbl->convertToWorldPose(instance, src_pose, dst_pose);
 }
 
-Amber_Result amberBlendPoses(Amber_Instance instance, uint32_t pose_count, const Amber_Pose *poses, const float *weights, Amber_Pose dst_pose)
+Amber_Result amberBlendPoses(Amber_Instance instance, uint32_t src_pose_count, const Amber_Pose *src_poses, const float *src_weights, Amber_Pose dst_pose)
 {
 	if (instance == AMBER_NULL_HANDLE)
 		return AMBER_INVALID_INSTANCE;
@@ -235,29 +247,17 @@ Amber_Result amberBlendPoses(Amber_Instance instance, uint32_t pose_count, const
 	assert(ptr->vtbl);
 	assert(ptr->vtbl->blendPoses);
 
-	return ptr->vtbl->blendPoses(instance, pose_count, poses, weights, dst_pose);
+	return ptr->vtbl->blendPoses(instance, src_pose_count, src_poses, src_weights, dst_pose);
 }
 
-Amber_Result amberPoseToModelSpace(Amber_Instance instance, Amber_Pose src_local_pose, Amber_Pose dst_model_pose)
+Amber_Result amberBlendAdditivePoses(Amber_Instance instance, Amber_Pose src_pose, uint32_t src_additive_pose_count, const Amber_Pose *src_additive_poses, const float *src_weights, Amber_Pose dst_pose)
 {
 	if (instance == AMBER_NULL_HANDLE)
 		return AMBER_INVALID_INSTANCE;
 
 	Amber_InstanceInternal *ptr = (Amber_InstanceInternal *)instance;
 	assert(ptr->vtbl);
-	assert(ptr->vtbl->poseToModelSpace);
+	assert(ptr->vtbl->blendAdditivePoses);
 
-	return ptr->vtbl->poseToModelSpace(instance, src_local_pose, dst_model_pose);
-}
-
-Amber_Result amberPoseToLocalSpace(Amber_Instance instance, Amber_Pose src_model_pose, Amber_Pose dst_local_pose)
-{
-	if (instance == AMBER_NULL_HANDLE)
-		return AMBER_INVALID_INSTANCE;
-
-	Amber_InstanceInternal *ptr = (Amber_InstanceInternal *)instance;
-	assert(ptr->vtbl);
-	assert(ptr->vtbl->poseToLocalSpace);
-
-	return ptr->vtbl->poseToLocalSpace(instance, src_model_pose, dst_local_pose);
+	return ptr->vtbl->blendAdditivePoses(instance, src_pose, src_additive_pose_count, src_additive_poses, src_weights, dst_pose);
 }
