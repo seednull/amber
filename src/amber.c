@@ -58,18 +58,6 @@ Amber_Result amberCreatePose(Amber_Instance instance, const Amber_PoseDesc *desc
 	return ptr->vtbl->createPose(instance, desc, pose);
 }
 
-Amber_Result amberCreateSampler(Amber_Instance instance, const Amber_SamplerDesc *desc, Amber_Sampler *sampler)
-{
-	if (instance == AMBER_NULL_HANDLE)
-		return AMBER_INVALID_INSTANCE;
-
-	Amber_InstanceInternal *ptr = (Amber_InstanceInternal *)instance;
-	assert(ptr->vtbl);
-	assert(ptr->vtbl->createSampler);
-
-	return ptr->vtbl->createSampler(instance, desc, sampler);
-}
-
 Amber_Result amberCreateSequence(Amber_Instance instance, const Amber_SequenceDesc *desc, Amber_Sequence *sequence)
 {
 	if (instance == AMBER_NULL_HANDLE)
@@ -104,18 +92,6 @@ Amber_Result amberDestroyPose(Amber_Instance instance, Amber_Pose pose)
 	assert(ptr->vtbl->destroyPose);
 
 	return ptr->vtbl->destroyPose(instance, pose);
-}
-
-Amber_Result amberDestroySampler(Amber_Instance instance, Amber_Sampler sampler)
-{
-	if (instance == AMBER_NULL_HANDLE)
-		return AMBER_INVALID_INSTANCE;
-
-	Amber_InstanceInternal *ptr = (Amber_InstanceInternal *)instance;
-	assert(ptr->vtbl);
-	assert(ptr->vtbl->destroySampler);
-
-	return ptr->vtbl->destroySampler(instance, sampler);
 }
 
 Amber_Result amberDestroySequence(Amber_Instance instance, Amber_Sequence sequence)
@@ -188,18 +164,6 @@ Amber_Result amberFetchPose(Amber_Instance instance, Amber_Sequence sequence, fl
 	assert(ptr->vtbl->fetchPose);
 
 	return ptr->vtbl->fetchPose(instance, sequence, time, dst_pose);
-}
-
-Amber_Result amberSamplePose(Amber_Instance instance, Amber_Sequence sequence, Amber_Sampler sampler, float time, Amber_Pose dst_pose)
-{
-	if (instance == AMBER_NULL_HANDLE)
-		return AMBER_INVALID_INSTANCE;
-
-	Amber_InstanceInternal *ptr = (Amber_InstanceInternal *)instance;
-	assert(ptr->vtbl);
-	assert(ptr->vtbl->samplePose);
-
-	return ptr->vtbl->samplePose(instance, sequence, sampler, time, dst_pose);
 }
 
 Amber_Result amberConvertToAdditivePose(Amber_Instance instance, Amber_Pose src_pose, Amber_Pose src_reference_pose, Amber_Pose dst_pose)

@@ -42,7 +42,6 @@ extern "C" {
 // Opaque handles
 AMBER_DEFINE_HANDLE(Amber_Instance);
 AMBER_DEFINE_HANDLE(Amber_Armature);
-AMBER_DEFINE_HANDLE(Amber_Sampler);
 AMBER_DEFINE_HANDLE(Amber_Sequence);
 AMBER_DEFINE_HANDLE(Amber_Pose);
 
@@ -60,16 +59,6 @@ typedef enum Amber_Result_t
 	AMBER_RESULT_ENUM_MAX,
 	AMBER_RESULT_ENUM_FORCE32 = 0x7FFFFFFF,
 } Amber_Result;
-
-typedef enum Amber_SamplerAddressMode_t
-{
-	AMBER_SAMPLER_ADDRESS_MODE_CLAMP = 0,
-	AMBER_SAMPLER_ADDRESS_MODE_REPEAT,
-	AMBER_SAMPLER_ADDRESS_MODE_MIRROR,
-
-	AMBER_SAMPLER_ADDRESS_MODE_ENUM_MAX,
-	AMBER_SAMPLER_ADDRESS_MODE_ENUM_FORCE32 = 0x7FFFFFFF,
-} Amber_SamplerAddressMode;
 
 // Structs
 typedef struct Amber_Vec2_t
@@ -113,12 +102,6 @@ typedef struct Amber_PoseDesc_t
 	Amber_Armature armature;
 } Amber_PoseDesc;
 
-typedef struct Amber_SamplerDesc_t
-{
-	Amber_SamplerAddressMode address_mode;
-	float frequency;
-} Amber_SamplerDesc;
-
 typedef struct Amber_SequenceKey_t
 {
 	float time;
@@ -151,12 +134,10 @@ typedef struct Amber_SequenceDesc_t
 // Function pointers
 typedef Amber_Result (*PFN_amberCreateArmature)(Amber_Instance instance, const Amber_ArmatureDesc *desc, Amber_Armature* armature);
 typedef Amber_Result (*PFN_amberCreatePose)(Amber_Instance instance, const Amber_PoseDesc *desc, Amber_Pose *pose);
-typedef Amber_Result (*PFN_amberCreateSampler)(Amber_Instance instance, const Amber_SamplerDesc *desc, Amber_Sampler *sampler);
 typedef Amber_Result (*PFN_amberCreateSequence)(Amber_Instance instance, const Amber_SequenceDesc *desc, Amber_Sequence *sequence);
 
 typedef Amber_Result (*PFN_amberDestroyArmature)(Amber_Instance instance, Amber_Armature armature);
 typedef Amber_Result (*PFN_amberDestroyPose)(Amber_Instance instance, Amber_Pose pose);
-typedef Amber_Result (*PFN_amberDestroySampler)(Amber_Instance instance, Amber_Sampler sampler);
 typedef Amber_Result (*PFN_amberDestroySequence)(Amber_Instance instance, Amber_Sequence sequence);
 typedef Amber_Result (*PFN_amberDestroyInstance)(Amber_Instance instance);
 
@@ -165,7 +146,6 @@ typedef Amber_Result (*PFN_amberMapPose)(Amber_Instance instance, Amber_Pose pos
 typedef Amber_Result (*PFN_amberUnmapPose)(Amber_Instance instance, Amber_Pose pose);
 
 typedef Amber_Result (*PFN_amberFetchPose)(Amber_Instance instance, Amber_Sequence sequence, float time, Amber_Pose dst_pose);
-typedef Amber_Result (*PFN_amberSamplePose)(Amber_Instance instance, Amber_Sequence sequence, Amber_Sampler sampler, float time, Amber_Pose dst_pose);
 
 typedef Amber_Result (*PFN_amberConvertToAdditivePose)(Amber_Instance instance, Amber_Pose src_pose, Amber_Pose src_reference_pose, Amber_Pose dst_pose);
 typedef Amber_Result (*PFN_amberConvertToLocalPose)(Amber_Instance instance, Amber_Pose src_pose, Amber_Pose dst_pose);
@@ -178,12 +158,10 @@ typedef struct Amber_InstanceTable_t
 {
 	PFN_amberCreateArmature createArmature;
 	PFN_amberCreatePose createPose;
-	PFN_amberCreateSampler createSampler;
 	PFN_amberCreateSequence createSequence;
 
 	PFN_amberDestroyArmature destroyArmature;
 	PFN_amberDestroyPose destroyPose;
-	PFN_amberDestroySampler destroySampler;
 	PFN_amberDestroySequence destroySequence;
 	PFN_amberDestroyInstance destroyInstance;
 
@@ -192,7 +170,6 @@ typedef struct Amber_InstanceTable_t
 	PFN_amberUnmapPose unmapPose;
 
 	PFN_amberFetchPose fetchPose;
-	PFN_amberSamplePose samplePose;
 
 	PFN_amberConvertToAdditivePose convertToAdditivePose;
 	PFN_amberConvertToLocalPose convertToLocalPose;
@@ -209,12 +186,10 @@ AMBER_APIENTRY Amber_Result amberGetInstanceTable(Amber_Instance instance, Amber
 
 AMBER_APIENTRY Amber_Result amberCreateArmature(Amber_Instance instance, const Amber_ArmatureDesc *desc, Amber_Armature* armature);
 AMBER_APIENTRY Amber_Result amberCreatePose(Amber_Instance instance, const Amber_PoseDesc *desc, Amber_Pose *pose);
-AMBER_APIENTRY Amber_Result amberCreateSampler(Amber_Instance instance, const Amber_SamplerDesc *desc, Amber_Sampler *sampler);
 AMBER_APIENTRY Amber_Result amberCreateSequence(Amber_Instance instance, const Amber_SequenceDesc *desc, Amber_Sequence *sequence);
 
 AMBER_APIENTRY Amber_Result amberDestroyArmature(Amber_Instance instance, Amber_Armature armature);
 AMBER_APIENTRY Amber_Result amberDestroyPose(Amber_Instance instance, Amber_Pose pose);
-AMBER_APIENTRY Amber_Result amberDestroySampler(Amber_Instance instance, Amber_Sampler sampler);
 AMBER_APIENTRY Amber_Result amberDestroySequence(Amber_Instance instance, Amber_Sequence sequence);
 AMBER_APIENTRY Amber_Result amberDestroyInstance(Amber_Instance instance);
 
@@ -223,7 +198,6 @@ AMBER_APIENTRY Amber_Result amberMapPose(Amber_Instance instance, Amber_Pose pos
 AMBER_APIENTRY Amber_Result amberUnmapPose(Amber_Instance instance, Amber_Pose pose);
 
 AMBER_APIENTRY Amber_Result amberFetchPose(Amber_Instance instance, Amber_Sequence sequence, float time, Amber_Pose dst_pose);
-AMBER_APIENTRY Amber_Result amberSamplePose(Amber_Instance instance, Amber_Sequence sequence, Amber_Sampler sampler, float time, Amber_Pose dst_pose);
 
 AMBER_APIENTRY Amber_Result amberConvertToAdditivePose(Amber_Instance instance, Amber_Pose src_pose, Amber_Pose src_reference_pose, Amber_Pose dst_pose);
 AMBER_APIENTRY Amber_Result amberConvertToLocalPose(Amber_Instance instance, Amber_Pose src_pose, Amber_Pose dst_pose);
