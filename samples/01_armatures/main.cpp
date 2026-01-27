@@ -4,10 +4,10 @@
 
 void testArmatures(Amber_Instance instance)
 {
-	const char *names[] = { "root", "left_hip", "left_thigh", "left_calf", "right_hip", "right_thigh", "right_calf" };
-	int32_t parents[] =   { -1,      0,          1,            2,           0,           4,             5           };
+	const char *names[] = {"root", "left_hip", "left_thigh", "left_calf", "right_hip", "right_thigh", "right_calf"};
+	int32_t parents[] =   {-1,      0,          1,            2,           0,           4,             5          };
 	
-	Amber_ArmatureDesc desc = { 7, parents, names };
+	Amber_ArmatureDesc desc = {7, parents, names};
 	Amber_Armature armature = AMBER_NULL_HANDLE;
 
 	Amber_Result result = amberCreateArmature(instance, &desc, &armature);

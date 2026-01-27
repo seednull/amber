@@ -72,4 +72,5 @@ add_subdirectory(src)
 
 if (AMBER_BUILD_SAMPLES)
 	add_subdirectory(samples/01_armatures)
+	add_subdirectory(samples/02_poses)
 endif()
