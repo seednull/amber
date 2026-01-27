@@ -8,6 +8,28 @@
 
 /*
  */
+static AMBER_INLINE float amber_floatMin(float a, float b);
+static AMBER_INLINE float amber_floatMax(float a, float b);
+static AMBER_INLINE float amber_floatClamp(float value, float min_val, float max_val);
+static AMBER_INLINE Amber_Vec3 amber_vec3Mad(Amber_Vec3 a, float s, Amber_Vec3 b);
+static AMBER_INLINE Amber_Vec3 amber_vec3Add(Amber_Vec3 a, Amber_Vec3 b);
+static AMBER_INLINE Amber_Vec3 amber_vec3Sub(Amber_Vec3 a, Amber_Vec3 b);
+static AMBER_INLINE Amber_Vec3 amber_vec3Mul(Amber_Vec3 a, Amber_Vec3 b);
+static AMBER_INLINE Amber_Vec3 amber_vec3Div(Amber_Vec3 a, Amber_Vec3 b);
+static AMBER_INLINE Amber_Vec3 amber_vec3Lerp(Amber_Vec3 a, Amber_Vec3 b, float t);
+static AMBER_INLINE Amber_Quat amber_quatMad(Amber_Quat a, float s, Amber_Quat b);
+static AMBER_INLINE Amber_Quat amber_quatMul(Amber_Quat a, Amber_Quat b);
+static AMBER_INLINE Amber_Quat amber_quatMulVec3(Amber_Quat a, Amber_Vec3 b);
+static AMBER_INLINE Amber_Vec3 amber_quatRotateVec3(Amber_Quat a, Amber_Vec3 v);
+static AMBER_INLINE float amber_quatDot(Amber_Quat a, Amber_Quat b);
+static AMBER_INLINE Amber_Quat amber_quatConjugate(Amber_Quat q);
+static AMBER_INLINE Amber_Quat amber_quatNormalize(Amber_Quat q);
+static AMBER_INLINE Amber_Quat amber_quatLerp(Amber_Quat a, Amber_Quat b, float t);
+static AMBER_INLINE Amber_Transform amber_invertTransform(Amber_Transform t);
+static AMBER_INLINE Amber_Transform amber_mulTransform(Amber_Transform a, Amber_Transform b);
+
+/*
+ */
 static AMBER_INLINE float amber_floatMin(float a, float b)
 {
 	return a < b ? a : b;
@@ -23,55 +45,190 @@ static AMBER_INLINE float amber_floatClamp(float value, float min_val, float max
 	return value < min_val ? min_val : (value > max_val ? max_val : value);
 }
 
-static AMBER_INLINE Amber_Vec3 amber_vec3Mad(const Amber_Vec3 *a, float s, const Amber_Vec3 *b)
+static AMBER_INLINE Amber_Vec3 amber_vec3Mad(Amber_Vec3 a, float s, Amber_Vec3 b)
 {
 	return (Amber_Vec3)
 	{
-		a->x * s + b->x,
-		a->y * s + b->y,
-		a->z * s + b->z
+		a.x * s + b.x,
+		a.y * s + b.y,
+		a.z * s + b.z
 	};
 }
 
-static AMBER_INLINE Amber_Quat amber_quatMad(const Amber_Quat *a, float s, const Amber_Quat *b)
+static AMBER_INLINE Amber_Vec3 amber_vec3Add(Amber_Vec3 a, Amber_Vec3 b)
+{
+	return (Amber_Vec3)
+	{
+		a.x + b.x,
+		a.y + b.y,
+		a.z + b.z
+	};
+}
+
+static AMBER_INLINE Amber_Vec3 amber_vec3Sub(Amber_Vec3 a, Amber_Vec3 b)
+{
+	return (Amber_Vec3)
+	{
+		a.x - b.x,
+		a.y - b.y,
+		a.z - b.z
+	};
+}
+
+static AMBER_INLINE Amber_Vec3 amber_vec3Mul(Amber_Vec3 a, Amber_Vec3 b)
+{
+	return (Amber_Vec3)
+	{
+		a.x * b.x,
+		a.y * b.y,
+		a.z * b.z
+	};
+}
+
+static AMBER_INLINE Amber_Vec3 amber_vec3Div(Amber_Vec3 a, Amber_Vec3 b)
+{
+	return (Amber_Vec3)
+	{
+		a.x / b.x,
+		a.y / b.y,
+		a.z / b.z
+	};
+}
+
+static AMBER_INLINE Amber_Vec3 amber_vec3Lerp(Amber_Vec3 a, Amber_Vec3 b, float t)
+{
+	return (Amber_Vec3)
+	{
+		a.x + (b.x - a.x) * t,
+		a.y + (b.y - a.y) * t,
+		a.z + (b.z - a.z) * t,
+	};
+}
+
+static AMBER_INLINE Amber_Quat amber_quatMad(Amber_Quat a, float s, Amber_Quat b)
 {
 	return (Amber_Quat)
 	{
-		a->x * s + b->x,
-		a->y * s + b->y,
-		a->z * s + b->z,
-		a->w * s + b->w
+		a.x * s + b.x,
+		a.y * s + b.y,
+		a.z * s + b.z,
+		a.w * s + b.w
 	};
 }
 
-static AMBER_INLINE Amber_Quat amber_quatNormalize(const Amber_Quat *q)
+static AMBER_INLINE Amber_Quat amber_quatMul(Amber_Quat a, Amber_Quat b)
 {
-	float len = q->x * q->x + q->y * q->y + q->z * q->z + q->w * q->w;
+	return (Amber_Quat)
+	{
+		// linear combination + cross product
+		a.w * b.x + b.w * a.x + a.y * b.z - a.z * b.y,
+		a.w * b.y + b.w * a.y + a.z * b.x - a.x * b.z,
+		a.w * b.z + b.w * a.z + a.x * b.y - a.y * b.x,
+
+		// mul                - dot product
+		a.w * b.w             - a.x * b.x - a.y * b.y - a.z * b.z,
+	};
+}
+
+static AMBER_INLINE Amber_Quat amber_quatMulVec3(Amber_Quat a, Amber_Vec3 b)
+{
+	return (Amber_Quat)
+	{
+		// linear combination + cross product
+		a.w * b.x             + a.y * b.z - a.z * b.y,
+		a.w * b.y             + a.z * b.x - a.x * b.z,
+		a.w * b.z             + a.x * b.y - a.y * b.x,
+
+		//                    - dot product
+		                      - a.x * b.x - a.y * b.y - a.z * b.z,
+	};
+}
+
+static AMBER_INLINE Amber_Vec3 amber_quatRotateVec3(Amber_Quat a, Amber_Vec3 v)
+{
+	Amber_Quat t = amber_quatMulVec3(a, v);
+	t = amber_quatMul(t, amber_quatConjugate(a));
+
+	return (Amber_Vec3)
+	{
+		t.x,
+		t.y,
+		t.z
+	};
+}
+
+static AMBER_INLINE float amber_quatDot(Amber_Quat a, Amber_Quat b)
+{
+	return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
+}
+
+static AMBER_INLINE Amber_Quat amber_quatConjugate(Amber_Quat q)
+{
+	return (Amber_Quat)
+	{
+		-q.x,
+		-q.y,
+		-q.z,
+		 q.w,
+	};
+}
+
+static AMBER_INLINE Amber_Quat amber_quatNormalize(Amber_Quat q)
+{
+	float len = q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w;
 	float inv_len = (len > 0.0f) ? 1.0f / sqrtf(len) : 0.0f;
 
 	return (Amber_Quat)
 	{
-		q->x * inv_len,
-		q->y * inv_len,
-		q->z * inv_len,
-		q->w * inv_len
+		q.x * inv_len,
+		q.y * inv_len,
+		q.z * inv_len,
+		q.w * inv_len
 	};
 }
 
-static AMBER_INLINE void amber_invertTransform(const Amber_Transform *src_transform, Amber_Transform *dst_transform)
+static AMBER_INLINE Amber_Quat amber_quatLerp(Amber_Quat a, Amber_Quat b, float t)
 {
-	AMBER_UNUSED(src_transform);
-	AMBER_UNUSED(dst_transform);
+	Amber_Quat q = (Amber_Quat)
+	{
+		a.x + (b.x - a.x) * t,
+		a.y + (b.y - a.y) * t,
+		a.z + (b.z - a.z) * t,
+		a.w + (b.w - a.w) * t,
+	};
+
+	return amber_quatNormalize(q);
 }
 
-static AMBER_INLINE void amber_mulTransform(const Amber_Transform *src_transform_a, const Amber_Transform *src_transform_b, Amber_Transform *dst_transform)
+static AMBER_INLINE Amber_Transform amber_invertTransform(Amber_Transform t)
 {
-	AMBER_UNUSED(src_transform_a);
-	AMBER_UNUSED(src_transform_b);
-	AMBER_UNUSED(dst_transform);
+	Amber_Vec3 scale = {1.0f / t.scale.x, 1.0f / t.scale.y, 1.0f / t.scale.z};
+	Amber_Quat rotation = amber_quatConjugate(t.rotation);
+	Amber_Vec3 position = amber_quatRotateVec3(rotation, amber_vec3Mul(scale, (Amber_Vec3){-t.position.x, -t.position.y, -t.position.z}));
+
+	return (Amber_Transform)
+	{
+		position,
+		rotation,
+		scale,
+	};
 }
 
-static AMBER_INLINE float amber_fetchCurveValue(const Amber_SequenceCurve *curve, float time)
+static AMBER_INLINE Amber_Transform amber_mulTransform(Amber_Transform a, Amber_Transform b)
+{
+	Amber_Vec3 scale = amber_vec3Mul(a.scale, b.scale);
+	Amber_Quat rotation = amber_quatMul(a.rotation, b.rotation);
+	Amber_Vec3 position = amber_vec3Add(a.position, amber_quatRotateVec3(a.rotation, amber_vec3Mul(a.scale, b.position)));
+
+	return (Amber_Transform)
+	{
+		position,
+		rotation,
+		scale,
+	};
+}
+
+static AMBER_INLINE float amber_fetchCurveValue(const Impl_SequenceCurve *curve, float time)
 {
 	assert(curve);
 	assert(curve->key_count > 0);
@@ -159,7 +316,6 @@ Amber_Result impl_instanceCreateArmature(Amber_Instance this, const Amber_Armatu
 
 	Impl_Instance *instance_ptr = (Impl_Instance *)this;
 
-	// TODO: maybe do depth-first prefix ordering in case we have badly ordered input hierarchy?
 	for (uint32_t i = 0; i < desc->joint_count; ++i)
 		assert(desc->joint_parents[i] < (int32_t)i);
 
@@ -217,8 +373,11 @@ Amber_Result impl_instanceCreatePose(Amber_Instance this, const Amber_PoseDesc *
 	Impl_Instance *instance_ptr = (Impl_Instance *)this;
 	Impl_Armature *armature_ptr = (Impl_Armature *)amber_poolGetElement(&instance_ptr->armatures, (Amber_PoolHandle)desc->armature);
 	assert(armature_ptr);
+	assert(armature_ptr->joint_count > 0);
+	assert(armature_ptr->joint_parents);
 
 	Amber_Transform *transforms = (Amber_Transform *)malloc(sizeof(Amber_Transform) * armature_ptr->joint_count);
+	memset(transforms, 0, sizeof(Amber_Transform) * armature_ptr->joint_count);
 
 	Impl_Pose result = {0};
 	result.armature = desc->armature;
@@ -479,22 +638,122 @@ Amber_Result impl_instanceUnmapPose(Amber_Instance this, Amber_Pose pose)
 
 Amber_Result impl_instanceFetchPose(Amber_Instance this, Amber_Sequence sequence, float time, Amber_Pose dst_pose)
 {
-	AMBER_UNUSED(this);
-	AMBER_UNUSED(sequence);
-	AMBER_UNUSED(time);
-	AMBER_UNUSED(dst_pose);
+	assert(this);
+	assert(sequence);
+	assert(dst_pose);
 
-	return AMBER_NOT_IMPLEMENTED;
+	Impl_Instance *instance_ptr = (Impl_Instance *)this;
+	Impl_Sequence *sequence_ptr = (Impl_Sequence *)amber_poolGetElement(&instance_ptr->sequences, (Amber_PoolHandle)sequence);
+	assert(sequence_ptr);
+	assert(sequence_ptr->joint_count > 0);
+	assert(sequence_ptr->joint_curves);
+	assert(sequence_ptr->joint_indices);
+
+	Impl_Pose *dst_pose_ptr = (Impl_Pose *)amber_poolGetElement(&instance_ptr->poses, (Amber_PoolHandle)dst_pose);
+	assert(dst_pose_ptr);
+	assert(dst_pose_ptr->transforms);
+
+	Impl_Armature *dst_armature_ptr = (Impl_Armature *)amber_poolGetElement(&instance_ptr->armatures, (Amber_PoolHandle)dst_pose_ptr->armature);
+	assert(dst_armature_ptr);
+	assert(dst_armature_ptr->joint_count > 0);
+	assert(dst_armature_ptr->joint_parents);
+
+	memset(dst_pose_ptr->transforms, 0, sizeof(Amber_Transform) * dst_armature_ptr->joint_count);
+
+	for (uint32_t i = 0; i < sequence_ptr->joint_count; ++i)
+	{
+		uint32_t index = sequence_ptr->joint_indices[i];
+		assert(index < dst_armature_ptr->joint_count);
+
+		const Impl_SequenceJointCurve *src_joint_curve = &sequence_ptr->joint_curves[i];
+		assert(src_joint_curve);
+
+		Amber_Transform *dst_joint_transform = &dst_pose_ptr->transforms[index];
+
+		const Impl_SequenceCurve *src_curves[10] =
+		{
+			&src_joint_curve->position_curves[0],
+			&src_joint_curve->position_curves[1],
+			&src_joint_curve->position_curves[2],
+
+			&src_joint_curve->rotation_curves[0],
+			&src_joint_curve->rotation_curves[1],
+			&src_joint_curve->rotation_curves[2],
+			&src_joint_curve->rotation_curves[3],
+
+			&src_joint_curve->scale_curves[0],
+			&src_joint_curve->scale_curves[1],
+			&src_joint_curve->scale_curves[2],
+		};
+
+		float *dst_values[10] =
+		{
+			&dst_joint_transform->position.x,
+			&dst_joint_transform->position.y,
+			&dst_joint_transform->position.z,
+
+			&dst_joint_transform->rotation.x,
+			&dst_joint_transform->rotation.z,
+			&dst_joint_transform->rotation.y,
+			&dst_joint_transform->rotation.w,
+
+			&dst_joint_transform->scale.x,
+			&dst_joint_transform->scale.y,
+			&dst_joint_transform->scale.z,
+		};
+
+		for (uint32_t j = 0; j < 10; ++j)
+		{
+			if (src_curves[j]->key_count == 0)
+				continue;
+
+			*dst_values[j] = amber_fetchCurveValue(src_curves[j], time);
+		}
+	}
+
+	return AMBER_SUCCESS;
 }
 
 Amber_Result impl_instanceConvertToAdditivePose(Amber_Instance this, Amber_Pose src_pose, Amber_Pose src_reference_pose, Amber_Pose dst_pose)
 {
-	AMBER_UNUSED(this);
-	AMBER_UNUSED(src_pose);
-	AMBER_UNUSED(src_reference_pose);
-	AMBER_UNUSED(dst_pose);
+	assert(this);
+	assert(src_pose);
+	assert(dst_pose);
 
-	return AMBER_NOT_IMPLEMENTED;
+	Impl_Instance *instance_ptr = (Impl_Instance *)this;
+	Impl_Pose *src_pose_ptr = (Impl_Pose *)amber_poolGetElement(&instance_ptr->poses, (Amber_PoolHandle)src_pose);
+	assert(src_pose_ptr);
+	assert(src_pose_ptr->transforms);
+
+	Impl_Pose *src_reference_pose_ptr = (Impl_Pose *)amber_poolGetElement(&instance_ptr->poses, (Amber_PoolHandle)src_reference_pose);
+	assert(src_reference_pose_ptr);
+	assert(src_reference_pose_ptr->transforms);
+
+	Impl_Pose *dst_pose_ptr = (Impl_Pose *)amber_poolGetElement(&instance_ptr->poses, (Amber_PoolHandle)dst_pose);
+	assert(dst_pose_ptr);
+	assert(dst_pose_ptr->transforms);
+
+	assert(src_pose_ptr->armature == dst_pose_ptr->armature);
+	assert(src_reference_pose_ptr->armature == dst_pose_ptr->armature);
+
+	Impl_Armature *armature_ptr = (Impl_Armature *)amber_poolGetElement(&instance_ptr->armatures, (Amber_PoolHandle)src_pose_ptr->armature);
+	assert(armature_ptr);
+	assert(armature_ptr->joint_count > 0);
+	assert(armature_ptr->joint_parents);
+
+	for (uint32_t i = 0; i < armature_ptr->joint_count; ++i)
+	{
+		const Amber_Transform *src_transform = &src_pose_ptr->transforms[i];
+		const Amber_Transform *src_reference_transform = &src_reference_pose_ptr->transforms[i];
+
+		Amber_Transform *dst_transform = &dst_pose_ptr->transforms[i];
+
+		dst_transform->position = amber_vec3Sub(src_transform->position, src_reference_transform->position);
+		dst_transform->rotation = amber_quatMul(amber_quatConjugate(src_reference_transform->rotation), src_transform->rotation);
+		dst_transform->scale = amber_vec3Div(src_transform->scale, src_reference_transform->scale);
+	}
+
+	return AMBER_SUCCESS;
 }
 
 Amber_Result impl_instanceConvertToLocalPose(Amber_Instance this, Amber_Pose src_pose, Amber_Pose dst_pose)
@@ -519,7 +778,6 @@ Amber_Result impl_instanceConvertToLocalPose(Amber_Instance this, Amber_Pose src
 	assert(armature_ptr->joint_count > 0);
 	assert(armature_ptr->joint_parents);
 
-	Amber_Transform parent_inv = {0};
 	for (int32_t i = armature_ptr->joint_count - 1; i >= 0; --i)
 	{
 		int32_t parent = armature_ptr->joint_parents[i];
@@ -528,8 +786,8 @@ Amber_Result impl_instanceConvertToLocalPose(Amber_Instance this, Amber_Pose src
 		if (parent == -1)
 			continue;
 
-		amber_invertTransform(&src_pose_ptr->transforms[parent], &parent_inv);
-		amber_mulTransform(&parent_inv, &src_pose_ptr->transforms[i], &dst_pose_ptr->transforms[i]);
+		Amber_Transform parent_inv = amber_invertTransform(src_pose_ptr->transforms[parent]);
+		dst_pose_ptr->transforms[i] = amber_mulTransform(parent_inv, src_pose_ptr->transforms[i]);
 	}
 
 	return AMBER_SUCCESS;
@@ -565,7 +823,7 @@ Amber_Result impl_instanceConvertToWorldPose(Amber_Instance this, Amber_Pose src
 		if (parent == -1)
 			continue;
 
-		amber_mulTransform(&src_pose_ptr->transforms[parent], &src_pose_ptr->transforms[i], &dst_pose_ptr->transforms[i]);
+		dst_pose_ptr->transforms[i] = amber_mulTransform(src_pose_ptr->transforms[parent], src_pose_ptr->transforms[i]);
 	}
 
 	return AMBER_SUCCESS;
@@ -600,23 +858,30 @@ Amber_Result impl_instanceBlendPoses(Amber_Instance this, uint32_t src_pose_coun
 
 		float src_weight = src_weights[i];
 
+		if (src_weight == 0.0f)
+			continue;
+
 		for (uint32_t j = 0; j < armature_ptr->joint_count; ++j)
 		{
 			const Amber_Transform *src_transform = &src_pose_ptr->transforms[j];
 			Amber_Transform *dst_transform = &dst_pose_ptr->transforms[j];
 
-			// TODO: check quaternion hemisphere
+			Amber_Quat src_rotation = src_transform->rotation;
+			Amber_Quat dst_rotation = dst_transform->rotation;
 
-			dst_transform->position = amber_vec3Mad(&src_transform->position, src_weight, &dst_transform->position);
-			dst_transform->rotation = amber_quatMad(&src_transform->rotation, src_weight, &dst_transform->rotation);
-			dst_transform->scale = amber_vec3Mad(&src_transform->scale, src_weight, &dst_transform->scale);
+			if (amber_quatDot(src_rotation, dst_rotation) < 0.0f)
+				dst_rotation = (Amber_Quat){-dst_rotation.x, -dst_rotation.y, -dst_rotation.z, -dst_rotation.w};
+
+			dst_transform->position = amber_vec3Mad(src_transform->position, src_weight, dst_transform->position);
+			dst_transform->rotation = amber_quatMad(src_rotation, src_weight, dst_rotation);
+			dst_transform->scale = amber_vec3Mad(src_transform->scale, src_weight, dst_transform->scale);
 		}
 	}
 
 	for (uint32_t j = 0; j < armature_ptr->joint_count; ++j)
 	{
 		Amber_Transform *dst_transform = &dst_pose_ptr->transforms[j];
-		dst_transform->rotation = amber_quatNormalize(&dst_transform->rotation);
+		dst_transform->rotation = amber_quatNormalize(dst_transform->rotation);
 	}
 
 	return AMBER_SUCCESS;
@@ -624,14 +889,55 @@ Amber_Result impl_instanceBlendPoses(Amber_Instance this, uint32_t src_pose_coun
 
 Amber_Result impl_instanceBlendAdditivePoses(Amber_Instance this, Amber_Pose src_pose, uint32_t src_additive_pose_count, const Amber_Pose *src_additive_poses, const float *src_weights, Amber_Pose dst_pose)
 {
-	AMBER_UNUSED(this);
-	AMBER_UNUSED(src_pose);
-	AMBER_UNUSED(src_additive_pose_count);
-	AMBER_UNUSED(src_additive_poses);
-	AMBER_UNUSED(src_weights);
-	AMBER_UNUSED(dst_pose);
+	assert(this);
+	assert(src_pose);
+	assert(src_additive_pose_count > 0);
+	assert(src_additive_poses);
+	assert(src_weights);
+	assert(dst_pose);
 
-	return AMBER_NOT_IMPLEMENTED;
+	Impl_Instance *instance_ptr = (Impl_Instance *)this;
+
+	Impl_Pose *src_pose_ptr = (Impl_Pose *)amber_poolGetElement(&instance_ptr->poses, (Amber_PoolHandle)src_pose);
+	assert(src_pose_ptr);
+	assert(src_pose_ptr->transforms);
+
+	Impl_Pose *dst_pose_ptr = (Impl_Pose *)amber_poolGetElement(&instance_ptr->poses, (Amber_PoolHandle)dst_pose);
+	assert(dst_pose_ptr);
+	assert(dst_pose_ptr->transforms);
+
+	Impl_Armature *armature_ptr = (Impl_Armature *)amber_poolGetElement(&instance_ptr->armatures, (Amber_PoolHandle)dst_pose_ptr->armature);
+	assert(armature_ptr);
+	assert(armature_ptr->joint_count > 0);
+	assert(armature_ptr->joint_parents);
+
+	assert(src_pose_ptr->armature == dst_pose_ptr->armature);
+	memcpy(dst_pose_ptr->transforms, src_pose_ptr->transforms, sizeof(Amber_Transform) * armature_ptr->joint_count);
+
+	for (uint32_t i = 0; i < src_additive_pose_count; ++i)
+	{
+		Impl_Pose *src_additive_pose_ptr = (Impl_Pose *)amber_poolGetElement(&instance_ptr->poses, (Amber_PoolHandle)src_additive_poses[i]);
+		assert(src_additive_pose_ptr);
+		assert(src_additive_pose_ptr->transforms);
+		assert(src_additive_pose_ptr->armature == dst_pose_ptr->armature);
+
+		float src_weight = src_weights[i];
+
+		if (src_weight == 0.0f)
+			continue;
+
+		for (uint32_t j = 0; j < armature_ptr->joint_count; ++j)
+		{
+			const Amber_Transform *src_additive_transform = &src_additive_pose_ptr->transforms[j];
+			Amber_Transform *dst_transform = &dst_pose_ptr->transforms[j];
+
+			dst_transform->position = amber_vec3Mad(src_additive_transform->position, src_weight, dst_transform->position);
+			dst_transform->rotation = amber_quatLerp(dst_transform->rotation, amber_quatMul(dst_transform->rotation, src_additive_transform->rotation), src_weight);
+			dst_transform->scale = amber_vec3Lerp(dst_transform->scale, amber_vec3Mul(dst_transform->scale, src_additive_transform->scale), src_weight);
+		}
+	}
+
+	return AMBER_SUCCESS;
 }
 
 /*
