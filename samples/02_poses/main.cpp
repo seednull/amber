@@ -86,10 +86,11 @@ void testPoses(Amber_Instance instance)
 
 	Amber_PoseDesc pose_desc = {armature};
 	Amber_Pose pose = AMBER_NULL_HANDLE;
+	Amber_Pose test_pose = AMBER_NULL_HANDLE;
+
 	result = amberCreatePose(instance, &pose_desc, &pose);
 	assert(result == AMBER_SUCCESS);
 
-	Amber_Transform *test_transforms = new Amber_Transform[armature_desc.joint_count];
 	Amber_Transform *pose_transforms = NULL;
 	result = amberMapPose(instance, pose, &pose_transforms);
 	assert(result == AMBER_SUCCESS);
@@ -103,12 +104,20 @@ void testPoses(Amber_Instance instance)
 		t->position = rest_positions[i];
 	}
 
-	memcpy(test_transforms, pose_transforms, sizeof(Amber_Transform) * armature_desc.joint_count);
+	result = amberCreatePose(instance, &pose_desc, &test_pose);
+	assert(result == AMBER_SUCCESS);
+
+	result = amberCopyPose(instance, pose, test_pose);
+	assert(result == AMBER_SUCCESS);
 
 	result = amberConvertToWorldPose(instance, pose, pose);
 	assert(result == AMBER_SUCCESS);
 
 	result = amberConvertToLocalPose(instance, pose, pose);
+	assert(result == AMBER_SUCCESS);
+
+	Amber_Transform *test_transforms = NULL;
+	result = amberMapPose(instance, test_pose, &test_transforms);
 	assert(result == AMBER_SUCCESS);
 
 	const float eps = 0.00001f;
@@ -135,7 +144,13 @@ void testPoses(Amber_Instance instance)
 	result = amberUnmapPose(instance, pose);
 	assert(result == AMBER_SUCCESS);
 
+	result = amberUnmapPose(instance, test_pose);
+	assert(result == AMBER_SUCCESS);
+
 	result = amberDestroyPose(instance, pose);
+	assert(result == AMBER_SUCCESS);
+
+	result = amberDestroyPose(instance, test_pose);
 	assert(result == AMBER_SUCCESS);
 
 	result = amberDestroyArmature(instance, armature);
