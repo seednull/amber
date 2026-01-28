@@ -154,52 +154,16 @@ Amber_Result amberUnmapPose(Amber_Instance instance, Amber_Pose pose)
 	return ptr->vtbl->unmapPose(instance, pose);
 }
 
-Amber_Result amberFetchPose(Amber_Instance instance, Amber_Sequence sequence, float time, Amber_Pose dst_pose)
+Amber_Result amberSamplePose(Amber_Instance instance, Amber_Sequence sequence, float time, Amber_Pose dst_pose)
 {
 	if (instance == AMBER_NULL_HANDLE)
 		return AMBER_INVALID_INSTANCE;
 
 	Amber_InstanceInternal *ptr = (Amber_InstanceInternal *)instance;
 	assert(ptr->vtbl);
-	assert(ptr->vtbl->fetchPose);
+	assert(ptr->vtbl->samplePose);
 
-	return ptr->vtbl->fetchPose(instance, sequence, time, dst_pose);
-}
-
-Amber_Result amberConvertToAdditivePose(Amber_Instance instance, Amber_Pose src_pose, Amber_Pose src_reference_pose, Amber_Pose dst_pose)
-{
-	if (instance == AMBER_NULL_HANDLE)
-		return AMBER_INVALID_INSTANCE;
-
-	Amber_InstanceInternal *ptr = (Amber_InstanceInternal *)instance;
-	assert(ptr->vtbl);
-	assert(ptr->vtbl->convertToAdditivePose);
-
-	return ptr->vtbl->convertToAdditivePose(instance, src_pose, src_reference_pose, dst_pose);
-}
-
-Amber_Result amberConvertToLocalPose(Amber_Instance instance, Amber_Pose src_pose, Amber_Pose dst_pose)
-{
-	if (instance == AMBER_NULL_HANDLE)
-		return AMBER_INVALID_INSTANCE;
-
-	Amber_InstanceInternal *ptr = (Amber_InstanceInternal *)instance;
-	assert(ptr->vtbl);
-	assert(ptr->vtbl->convertToLocalPose);
-
-	return ptr->vtbl->convertToLocalPose(instance, src_pose, dst_pose);
-}
-
-Amber_Result amberConvertToWorldPose(Amber_Instance instance, Amber_Pose src_pose, Amber_Pose dst_pose)
-{
-	if (instance == AMBER_NULL_HANDLE)
-		return AMBER_INVALID_INSTANCE;
-
-	Amber_InstanceInternal *ptr = (Amber_InstanceInternal *)instance;
-	assert(ptr->vtbl);
-	assert(ptr->vtbl->convertToWorldPose);
-
-	return ptr->vtbl->convertToWorldPose(instance, src_pose, dst_pose);
+	return ptr->vtbl->samplePose(instance, sequence, time, dst_pose);
 }
 
 Amber_Result amberBlendPoses(Amber_Instance instance, uint32_t src_pose_count, const Amber_Pose *src_poses, const float *src_weights, Amber_Pose dst_pose)
@@ -214,14 +178,50 @@ Amber_Result amberBlendPoses(Amber_Instance instance, uint32_t src_pose_count, c
 	return ptr->vtbl->blendPoses(instance, src_pose_count, src_poses, src_weights, dst_pose);
 }
 
-Amber_Result amberBlendAdditivePoses(Amber_Instance instance, Amber_Pose src_pose, uint32_t src_additive_pose_count, const Amber_Pose *src_additive_poses, const float *src_weights, Amber_Pose dst_pose)
+Amber_Result amberComputeAdditivePose(Amber_Instance instance, Amber_Pose src_pose, Amber_Pose src_reference_pose, Amber_Pose dst_pose)
 {
 	if (instance == AMBER_NULL_HANDLE)
 		return AMBER_INVALID_INSTANCE;
 
 	Amber_InstanceInternal *ptr = (Amber_InstanceInternal *)instance;
 	assert(ptr->vtbl);
-	assert(ptr->vtbl->blendAdditivePoses);
+	assert(ptr->vtbl->computeAdditivePose);
 
-	return ptr->vtbl->blendAdditivePoses(instance, src_pose, src_additive_pose_count, src_additive_poses, src_weights, dst_pose);
+	return ptr->vtbl->computeAdditivePose(instance, src_pose, src_reference_pose, dst_pose);
+}
+
+Amber_Result amberApplyAdditivePoses(Amber_Instance instance, Amber_Pose src_pose, uint32_t src_additive_pose_count, const Amber_Pose *src_additive_poses, const float *src_weights, Amber_Pose dst_pose)
+{
+	if (instance == AMBER_NULL_HANDLE)
+		return AMBER_INVALID_INSTANCE;
+
+	Amber_InstanceInternal *ptr = (Amber_InstanceInternal *)instance;
+	assert(ptr->vtbl);
+	assert(ptr->vtbl->applyAdditivePoses);
+
+	return ptr->vtbl->applyAdditivePoses(instance, src_pose, src_additive_pose_count, src_additive_poses, src_weights, dst_pose);
+}
+
+Amber_Result amberConvertToWorldPose(Amber_Instance instance, Amber_Pose src_pose, Amber_Pose dst_pose)
+{
+	if (instance == AMBER_NULL_HANDLE)
+		return AMBER_INVALID_INSTANCE;
+
+	Amber_InstanceInternal *ptr = (Amber_InstanceInternal *)instance;
+	assert(ptr->vtbl);
+	assert(ptr->vtbl->convertToWorldPose);
+
+	return ptr->vtbl->convertToWorldPose(instance, src_pose, dst_pose);
+}
+
+Amber_Result amberConvertToLocalPose(Amber_Instance instance, Amber_Pose src_pose, Amber_Pose dst_pose)
+{
+	if (instance == AMBER_NULL_HANDLE)
+		return AMBER_INVALID_INSTANCE;
+
+	Amber_InstanceInternal *ptr = (Amber_InstanceInternal *)instance;
+	assert(ptr->vtbl);
+	assert(ptr->vtbl->convertToLocalPose);
+
+	return ptr->vtbl->convertToLocalPose(instance, src_pose, dst_pose);
 }

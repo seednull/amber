@@ -144,15 +144,14 @@ typedef Amber_Result (*PFN_amberDestroyInstance)(Amber_Instance instance);
 typedef Amber_Result (*PFN_amberCopyPose)(Amber_Instance instance, Amber_Pose src_pose, Amber_Pose dst_pose);
 typedef Amber_Result (*PFN_amberMapPose)(Amber_Instance instance, Amber_Pose pose, Amber_Transform **transforms);
 typedef Amber_Result (*PFN_amberUnmapPose)(Amber_Instance instance, Amber_Pose pose);
-
-typedef Amber_Result (*PFN_amberFetchPose)(Amber_Instance instance, Amber_Sequence sequence, float time, Amber_Pose dst_pose);
-
-typedef Amber_Result (*PFN_amberConvertToAdditivePose)(Amber_Instance instance, Amber_Pose src_pose, Amber_Pose src_reference_pose, Amber_Pose dst_pose);
-typedef Amber_Result (*PFN_amberConvertToLocalPose)(Amber_Instance instance, Amber_Pose src_pose, Amber_Pose dst_pose);
-typedef Amber_Result (*PFN_amberConvertToWorldPose)(Amber_Instance instance, Amber_Pose src_pose, Amber_Pose dst_pose);
+typedef Amber_Result (*PFN_amberSamplePose)(Amber_Instance instance, Amber_Sequence sequence, float time, Amber_Pose dst_pose);
 
 typedef Amber_Result (*PFN_amberBlendPoses)(Amber_Instance instance, uint32_t src_pose_count, const Amber_Pose *src_poses, const float *src_weights, Amber_Pose dst_pose);
-typedef Amber_Result (*PFN_amberBlendAdditivePoses)(Amber_Instance instance, Amber_Pose src_pose, uint32_t src_additive_pose_count, const Amber_Pose *src_additive_poses, const float *src_weights, Amber_Pose dst_pose);
+typedef Amber_Result (*PFN_amberComputeAdditivePose)(Amber_Instance instance, Amber_Pose src_pose, Amber_Pose src_reference_pose, Amber_Pose dst_pose);
+typedef Amber_Result (*PFN_amberApplyAdditivePoses)(Amber_Instance instance, Amber_Pose src_pose, uint32_t src_additive_pose_count, const Amber_Pose *src_additive_poses, const float *src_weights, Amber_Pose dst_pose);
+
+typedef Amber_Result (*PFN_amberConvertToWorldPose)(Amber_Instance instance, Amber_Pose src_pose, Amber_Pose dst_pose);
+typedef Amber_Result (*PFN_amberConvertToLocalPose)(Amber_Instance instance, Amber_Pose src_pose, Amber_Pose dst_pose);
 
 typedef struct Amber_InstanceTable_t
 {
@@ -168,15 +167,14 @@ typedef struct Amber_InstanceTable_t
 	PFN_amberCopyPose copyPose;
 	PFN_amberMapPose mapPose;
 	PFN_amberUnmapPose unmapPose;
-
-	PFN_amberFetchPose fetchPose;
-
-	PFN_amberConvertToAdditivePose convertToAdditivePose;
-	PFN_amberConvertToLocalPose convertToLocalPose;
-	PFN_amberConvertToWorldPose convertToWorldPose;
+	PFN_amberSamplePose samplePose;
 
 	PFN_amberBlendPoses blendPoses;
-	PFN_amberBlendAdditivePoses blendAdditivePoses;
+	PFN_amberComputeAdditivePose computeAdditivePose;
+	PFN_amberApplyAdditivePoses applyAdditivePoses;
+
+	PFN_amberConvertToWorldPose convertToWorldPose;
+	PFN_amberConvertToLocalPose convertToLocalPose;
 } Amber_InstanceTable;
 
 // API
@@ -196,15 +194,14 @@ AMBER_APIENTRY Amber_Result amberDestroyInstance(Amber_Instance instance);
 AMBER_APIENTRY Amber_Result amberCopyPose(Amber_Instance instance, Amber_Pose src_pose, Amber_Pose dst_pose);
 AMBER_APIENTRY Amber_Result amberMapPose(Amber_Instance instance, Amber_Pose pose, Amber_Transform **transforms);
 AMBER_APIENTRY Amber_Result amberUnmapPose(Amber_Instance instance, Amber_Pose pose);
-
-AMBER_APIENTRY Amber_Result amberFetchPose(Amber_Instance instance, Amber_Sequence sequence, float time, Amber_Pose dst_pose);
-
-AMBER_APIENTRY Amber_Result amberConvertToAdditivePose(Amber_Instance instance, Amber_Pose src_pose, Amber_Pose src_reference_pose, Amber_Pose dst_pose);
-AMBER_APIENTRY Amber_Result amberConvertToLocalPose(Amber_Instance instance, Amber_Pose src_pose, Amber_Pose dst_pose);
-AMBER_APIENTRY Amber_Result amberConvertToWorldPose(Amber_Instance instance, Amber_Pose src_pose, Amber_Pose dst_pose);
+AMBER_APIENTRY Amber_Result amberSamplePose(Amber_Instance instance, Amber_Sequence sequence, float time, Amber_Pose dst_pose);
 
 AMBER_APIENTRY Amber_Result amberBlendPoses(Amber_Instance instance, uint32_t src_pose_count, const Amber_Pose *src_poses, const float *src_weights, Amber_Pose dst_pose);
-AMBER_APIENTRY Amber_Result amberBlendAdditivePoses(Amber_Instance instance, Amber_Pose src_pose, uint32_t src_additive_pose_count, const Amber_Pose *src_additive_poses, const float *src_weights, Amber_Pose dst_pose);
+AMBER_APIENTRY Amber_Result amberComputeAdditivePose(Amber_Instance instance, Amber_Pose src_pose, Amber_Pose src_reference_pose, Amber_Pose dst_pose);
+AMBER_APIENTRY Amber_Result amberApplyAdditivePoses(Amber_Instance instance, Amber_Pose src_pose, uint32_t src_additive_pose_count, const Amber_Pose *src_additive_poses, const float *src_weights, Amber_Pose dst_pose);
+
+AMBER_APIENTRY Amber_Result amberConvertToWorldPose(Amber_Instance instance, Amber_Pose src_pose, Amber_Pose dst_pose);
+AMBER_APIENTRY Amber_Result amberConvertToLocalPose(Amber_Instance instance, Amber_Pose src_pose, Amber_Pose dst_pose);
 #endif
 
 #ifdef __cplusplus

@@ -636,7 +636,7 @@ Amber_Result impl_instanceUnmapPose(Amber_Instance this, Amber_Pose pose)
 	return AMBER_SUCCESS;
 }
 
-Amber_Result impl_instanceFetchPose(Amber_Instance this, Amber_Sequence sequence, float time, Amber_Pose dst_pose)
+Amber_Result impl_instanceSamplePose(Amber_Instance this, Amber_Sequence sequence, float time, Amber_Pose dst_pose)
 {
 	assert(this);
 	assert(sequence);
@@ -714,121 +714,6 @@ Amber_Result impl_instanceFetchPose(Amber_Instance this, Amber_Sequence sequence
 	return AMBER_SUCCESS;
 }
 
-Amber_Result impl_instanceConvertToAdditivePose(Amber_Instance this, Amber_Pose src_pose, Amber_Pose src_reference_pose, Amber_Pose dst_pose)
-{
-	assert(this);
-	assert(src_pose);
-	assert(dst_pose);
-
-	Impl_Instance *instance_ptr = (Impl_Instance *)this;
-	Impl_Pose *src_pose_ptr = (Impl_Pose *)amber_poolGetElement(&instance_ptr->poses, (Amber_PoolHandle)src_pose);
-	assert(src_pose_ptr);
-	assert(src_pose_ptr->transforms);
-
-	Impl_Pose *src_reference_pose_ptr = (Impl_Pose *)amber_poolGetElement(&instance_ptr->poses, (Amber_PoolHandle)src_reference_pose);
-	assert(src_reference_pose_ptr);
-	assert(src_reference_pose_ptr->transforms);
-
-	Impl_Pose *dst_pose_ptr = (Impl_Pose *)amber_poolGetElement(&instance_ptr->poses, (Amber_PoolHandle)dst_pose);
-	assert(dst_pose_ptr);
-	assert(dst_pose_ptr->transforms);
-
-	assert(src_pose_ptr->armature == dst_pose_ptr->armature);
-	assert(src_reference_pose_ptr->armature == dst_pose_ptr->armature);
-
-	Impl_Armature *armature_ptr = (Impl_Armature *)amber_poolGetElement(&instance_ptr->armatures, (Amber_PoolHandle)src_pose_ptr->armature);
-	assert(armature_ptr);
-	assert(armature_ptr->joint_count > 0);
-	assert(armature_ptr->joint_parents);
-
-	for (uint32_t i = 0; i < armature_ptr->joint_count; ++i)
-	{
-		const Amber_Transform *src_transform = &src_pose_ptr->transforms[i];
-		const Amber_Transform *src_reference_transform = &src_reference_pose_ptr->transforms[i];
-
-		Amber_Transform *dst_transform = &dst_pose_ptr->transforms[i];
-
-		dst_transform->position = amber_vec3Sub(src_transform->position, src_reference_transform->position);
-		dst_transform->rotation = amber_quatMul(amber_quatConjugate(src_reference_transform->rotation), src_transform->rotation);
-		dst_transform->scale = amber_vec3Div(src_transform->scale, src_reference_transform->scale);
-	}
-
-	return AMBER_SUCCESS;
-}
-
-Amber_Result impl_instanceConvertToLocalPose(Amber_Instance this, Amber_Pose src_pose, Amber_Pose dst_pose)
-{
-	assert(this);
-	assert(src_pose);
-	assert(dst_pose);
-
-	Impl_Instance *instance_ptr = (Impl_Instance *)this;
-	Impl_Pose *src_pose_ptr = (Impl_Pose *)amber_poolGetElement(&instance_ptr->poses, (Amber_PoolHandle)src_pose);
-	assert(src_pose_ptr);
-	assert(src_pose_ptr->transforms);
-
-	Impl_Pose *dst_pose_ptr = (Impl_Pose *)amber_poolGetElement(&instance_ptr->poses, (Amber_PoolHandle)dst_pose);
-	assert(dst_pose_ptr);
-	assert(dst_pose_ptr->transforms);
-
-	assert(src_pose_ptr->armature == dst_pose_ptr->armature);
-
-	Impl_Armature *armature_ptr = (Impl_Armature *)amber_poolGetElement(&instance_ptr->armatures, (Amber_PoolHandle)src_pose_ptr->armature);
-	assert(armature_ptr);
-	assert(armature_ptr->joint_count > 0);
-	assert(armature_ptr->joint_parents);
-
-	for (int32_t i = armature_ptr->joint_count - 1; i >= 0; --i)
-	{
-		int32_t parent = armature_ptr->joint_parents[i];
-		assert(parent < i);
-
-		if (parent == -1)
-			continue;
-
-		Amber_Transform parent_inv = amber_invertTransform(src_pose_ptr->transforms[parent]);
-		dst_pose_ptr->transforms[i] = amber_mulTransform(parent_inv, src_pose_ptr->transforms[i]);
-	}
-
-	return AMBER_SUCCESS;
-}
-
-Amber_Result impl_instanceConvertToWorldPose(Amber_Instance this, Amber_Pose src_pose, Amber_Pose dst_pose)
-{
-	assert(this);
-	assert(src_pose);
-	assert(dst_pose);
-
-	Impl_Instance *instance_ptr = (Impl_Instance *)this;
-	Impl_Pose *src_pose_ptr = (Impl_Pose *)amber_poolGetElement(&instance_ptr->poses, (Amber_PoolHandle)src_pose);
-	assert(src_pose_ptr);
-	assert(src_pose_ptr->transforms);
-
-	Impl_Pose *dst_pose_ptr = (Impl_Pose *)amber_poolGetElement(&instance_ptr->poses, (Amber_PoolHandle)dst_pose);
-	assert(dst_pose_ptr);
-	assert(dst_pose_ptr->transforms);
-
-	assert(src_pose_ptr->armature == dst_pose_ptr->armature);
-
-	Impl_Armature *armature_ptr = (Impl_Armature *)amber_poolGetElement(&instance_ptr->armatures, (Amber_PoolHandle)src_pose_ptr->armature);
-	assert(armature_ptr);
-	assert(armature_ptr->joint_count > 0);
-	assert(armature_ptr->joint_parents);
-
-	for (uint32_t i = 0; i < armature_ptr->joint_count; ++i)
-	{
-		int32_t parent = armature_ptr->joint_parents[i];
-		assert(parent < (int32_t)i);
-
-		if (parent == -1)
-			continue;
-
-		dst_pose_ptr->transforms[i] = amber_mulTransform(src_pose_ptr->transforms[parent], src_pose_ptr->transforms[i]);
-	}
-
-	return AMBER_SUCCESS;
-}
-
 Amber_Result impl_instanceBlendPoses(Amber_Instance this, uint32_t src_pose_count, const Amber_Pose *src_poses, const float *src_weights, Amber_Pose dst_pose)
 {
 	assert(this);
@@ -887,7 +772,49 @@ Amber_Result impl_instanceBlendPoses(Amber_Instance this, uint32_t src_pose_coun
 	return AMBER_SUCCESS;
 }
 
-Amber_Result impl_instanceBlendAdditivePoses(Amber_Instance this, Amber_Pose src_pose, uint32_t src_additive_pose_count, const Amber_Pose *src_additive_poses, const float *src_weights, Amber_Pose dst_pose)
+Amber_Result impl_instanceComputeAdditivePose(Amber_Instance this, Amber_Pose src_pose, Amber_Pose src_reference_pose, Amber_Pose dst_pose)
+{
+	assert(this);
+	assert(src_pose);
+	assert(dst_pose);
+
+	Impl_Instance *instance_ptr = (Impl_Instance *)this;
+	Impl_Pose *src_pose_ptr = (Impl_Pose *)amber_poolGetElement(&instance_ptr->poses, (Amber_PoolHandle)src_pose);
+	assert(src_pose_ptr);
+	assert(src_pose_ptr->transforms);
+
+	Impl_Pose *src_reference_pose_ptr = (Impl_Pose *)amber_poolGetElement(&instance_ptr->poses, (Amber_PoolHandle)src_reference_pose);
+	assert(src_reference_pose_ptr);
+	assert(src_reference_pose_ptr->transforms);
+
+	Impl_Pose *dst_pose_ptr = (Impl_Pose *)amber_poolGetElement(&instance_ptr->poses, (Amber_PoolHandle)dst_pose);
+	assert(dst_pose_ptr);
+	assert(dst_pose_ptr->transforms);
+
+	assert(src_pose_ptr->armature == dst_pose_ptr->armature);
+	assert(src_reference_pose_ptr->armature == dst_pose_ptr->armature);
+
+	Impl_Armature *armature_ptr = (Impl_Armature *)amber_poolGetElement(&instance_ptr->armatures, (Amber_PoolHandle)src_pose_ptr->armature);
+	assert(armature_ptr);
+	assert(armature_ptr->joint_count > 0);
+	assert(armature_ptr->joint_parents);
+
+	for (uint32_t i = 0; i < armature_ptr->joint_count; ++i)
+	{
+		const Amber_Transform *src_transform = &src_pose_ptr->transforms[i];
+		const Amber_Transform *src_reference_transform = &src_reference_pose_ptr->transforms[i];
+
+		Amber_Transform *dst_transform = &dst_pose_ptr->transforms[i];
+
+		dst_transform->position = amber_vec3Sub(src_transform->position, src_reference_transform->position);
+		dst_transform->rotation = amber_quatMul(amber_quatConjugate(src_reference_transform->rotation), src_transform->rotation);
+		dst_transform->scale = amber_vec3Div(src_transform->scale, src_reference_transform->scale);
+	}
+
+	return AMBER_SUCCESS;
+}
+
+Amber_Result impl_instanceApplyAdditivePoses(Amber_Instance this, Amber_Pose src_pose, uint32_t src_additive_pose_count, const Amber_Pose *src_additive_poses, const float *src_weights, Amber_Pose dst_pose)
 {
 	assert(this);
 	assert(src_pose);
@@ -940,6 +867,79 @@ Amber_Result impl_instanceBlendAdditivePoses(Amber_Instance this, Amber_Pose src
 	return AMBER_SUCCESS;
 }
 
+Amber_Result impl_instanceConvertToWorldPose(Amber_Instance this, Amber_Pose src_pose, Amber_Pose dst_pose)
+{
+	assert(this);
+	assert(src_pose);
+	assert(dst_pose);
+
+	Impl_Instance *instance_ptr = (Impl_Instance *)this;
+	Impl_Pose *src_pose_ptr = (Impl_Pose *)amber_poolGetElement(&instance_ptr->poses, (Amber_PoolHandle)src_pose);
+	assert(src_pose_ptr);
+	assert(src_pose_ptr->transforms);
+
+	Impl_Pose *dst_pose_ptr = (Impl_Pose *)amber_poolGetElement(&instance_ptr->poses, (Amber_PoolHandle)dst_pose);
+	assert(dst_pose_ptr);
+	assert(dst_pose_ptr->transforms);
+
+	assert(src_pose_ptr->armature == dst_pose_ptr->armature);
+
+	Impl_Armature *armature_ptr = (Impl_Armature *)amber_poolGetElement(&instance_ptr->armatures, (Amber_PoolHandle)src_pose_ptr->armature);
+	assert(armature_ptr);
+	assert(armature_ptr->joint_count > 0);
+	assert(armature_ptr->joint_parents);
+
+	for (uint32_t i = 0; i < armature_ptr->joint_count; ++i)
+	{
+		int32_t parent = armature_ptr->joint_parents[i];
+		assert(parent < (int32_t)i);
+
+		if (parent == -1)
+			continue;
+
+		dst_pose_ptr->transforms[i] = amber_mulTransform(src_pose_ptr->transforms[parent], src_pose_ptr->transforms[i]);
+	}
+
+	return AMBER_SUCCESS;
+}
+
+Amber_Result impl_instanceConvertToLocalPose(Amber_Instance this, Amber_Pose src_pose, Amber_Pose dst_pose)
+{
+	assert(this);
+	assert(src_pose);
+	assert(dst_pose);
+
+	Impl_Instance *instance_ptr = (Impl_Instance *)this;
+	Impl_Pose *src_pose_ptr = (Impl_Pose *)amber_poolGetElement(&instance_ptr->poses, (Amber_PoolHandle)src_pose);
+	assert(src_pose_ptr);
+	assert(src_pose_ptr->transforms);
+
+	Impl_Pose *dst_pose_ptr = (Impl_Pose *)amber_poolGetElement(&instance_ptr->poses, (Amber_PoolHandle)dst_pose);
+	assert(dst_pose_ptr);
+	assert(dst_pose_ptr->transforms);
+
+	assert(src_pose_ptr->armature == dst_pose_ptr->armature);
+
+	Impl_Armature *armature_ptr = (Impl_Armature *)amber_poolGetElement(&instance_ptr->armatures, (Amber_PoolHandle)src_pose_ptr->armature);
+	assert(armature_ptr);
+	assert(armature_ptr->joint_count > 0);
+	assert(armature_ptr->joint_parents);
+
+	for (int32_t i = armature_ptr->joint_count - 1; i >= 0; --i)
+	{
+		int32_t parent = armature_ptr->joint_parents[i];
+		assert(parent < i);
+
+		if (parent == -1)
+			continue;
+
+		Amber_Transform parent_inv = amber_invertTransform(src_pose_ptr->transforms[parent]);
+		dst_pose_ptr->transforms[i] = amber_mulTransform(parent_inv, src_pose_ptr->transforms[i]);
+	}
+
+	return AMBER_SUCCESS;
+}
+
 /*
  */
 static Amber_InstanceTable instance_vtbl =
@@ -956,15 +956,14 @@ static Amber_InstanceTable instance_vtbl =
 	impl_instanceCopyPose,
 	impl_instanceMapPose,
 	impl_instanceUnmapPose,
-
-	impl_instanceFetchPose,
-
-	impl_instanceConvertToAdditivePose,
-	impl_instanceConvertToLocalPose,
-	impl_instanceConvertToWorldPose,
+	impl_instanceSamplePose,
 
 	impl_instanceBlendPoses,
-	impl_instanceBlendAdditivePoses,
+	impl_instanceComputeAdditivePose,
+	impl_instanceApplyAdditivePoses,
+
+	impl_instanceConvertToWorldPose,
+	impl_instanceConvertToLocalPose,
 };
 
 /*
