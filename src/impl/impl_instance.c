@@ -424,10 +424,12 @@ Amber_Result impl_instanceCreateSequence(Amber_Instance this, const Amber_Sequen
 			&src_joint_curve->position_curves[0],
 			&src_joint_curve->position_curves[1],
 			&src_joint_curve->position_curves[2],
+
 			&src_joint_curve->rotation_curves[0],
 			&src_joint_curve->rotation_curves[1],
 			&src_joint_curve->rotation_curves[2],
 			&src_joint_curve->rotation_curves[3],
+
 			&src_joint_curve->scale_curves[0],
 			&src_joint_curve->scale_curves[1],
 			&src_joint_curve->scale_curves[2],
@@ -438,10 +440,12 @@ Amber_Result impl_instanceCreateSequence(Amber_Instance this, const Amber_Sequen
 			&dst_joint_curve->position_curves[0],
 			&dst_joint_curve->position_curves[1],
 			&dst_joint_curve->position_curves[2],
+
 			&dst_joint_curve->rotation_curves[0],
 			&dst_joint_curve->rotation_curves[1],
 			&dst_joint_curve->rotation_curves[2],
 			&dst_joint_curve->rotation_curves[3],
+
 			&dst_joint_curve->scale_curves[0],
 			&dst_joint_curve->scale_curves[1],
 			&dst_joint_curve->scale_curves[2],
@@ -665,7 +669,15 @@ Amber_Result impl_instanceSamplePose(Amber_Instance this, Amber_Sequence sequenc
 	assert(dst_armature_ptr->joint_count > 0);
 	assert(dst_armature_ptr->joint_parents);
 
-	memset(dst_pose_ptr->transforms, 0, sizeof(Amber_Transform) * dst_armature_ptr->joint_count);
+	for (uint32_t i = 0; i < dst_armature_ptr->joint_count; ++i)
+	{
+		dst_pose_ptr->transforms[i] = (Amber_Transform)
+		{
+			0.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 1.0f,
+			1.0f, 1.0f, 1.0f,
+		};
+	}
 
 	for (uint32_t i = 0; i < sequence_ptr->joint_count; ++i)
 	{
@@ -700,8 +712,8 @@ Amber_Result impl_instanceSamplePose(Amber_Instance this, Amber_Sequence sequenc
 			&dst_joint_transform->position.z,
 
 			&dst_joint_transform->rotation.x,
-			&dst_joint_transform->rotation.z,
 			&dst_joint_transform->rotation.y,
+			&dst_joint_transform->rotation.z,
 			&dst_joint_transform->rotation.w,
 
 			&dst_joint_transform->scale.x,
