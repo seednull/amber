@@ -100,6 +100,8 @@ typedef struct Amber_ArmatureDesc_t
 typedef struct Amber_PoseDesc_t
 {
 	Amber_Armature armature;
+	uint32_t joint_count;
+	const Amber_Transform *joint_transforms;
 } Amber_PoseDesc;
 
 typedef struct Amber_SequenceKey_t

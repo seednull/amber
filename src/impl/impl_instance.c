@@ -377,7 +377,14 @@ Amber_Result impl_instanceCreatePose(Amber_Instance this, const Amber_PoseDesc *
 	assert(armature_ptr->joint_parents);
 
 	Amber_Transform *transforms = (Amber_Transform *)malloc(sizeof(Amber_Transform) * armature_ptr->joint_count);
-	memset(transforms, 0, sizeof(Amber_Transform) * armature_ptr->joint_count);
+
+	if (desc->joint_transforms)
+	{
+		assert(armature_ptr->joint_count == desc->joint_count);
+		memcpy(transforms, desc->joint_transforms, sizeof(Amber_Transform) * armature_ptr->joint_count);
+	}
+	else
+		memset(transforms, 0, sizeof(Amber_Transform) * armature_ptr->joint_count);
 
 	Impl_Pose result = {0};
 	result.armature = desc->armature;
