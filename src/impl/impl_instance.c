@@ -895,9 +895,9 @@ Amber_Result impl_instanceConvertToWorldPose(Amber_Instance this, Amber_Pose src
 		assert(parent < (int32_t)i);
 
 		if (parent == -1)
-			continue;
-
-		dst_pose_ptr->transforms[i] = amber_mulTransform(src_pose_ptr->transforms[parent], src_pose_ptr->transforms[i]);
+			dst_pose_ptr->transforms[i] = src_pose_ptr->transforms[i];
+		else
+			dst_pose_ptr->transforms[i] = amber_mulTransform(dst_pose_ptr->transforms[parent], src_pose_ptr->transforms[i]);
 	}
 
 	return AMBER_SUCCESS;
@@ -931,10 +931,9 @@ Amber_Result impl_instanceConvertToLocalPose(Amber_Instance this, Amber_Pose src
 		assert(parent < i);
 
 		if (parent == -1)
-			continue;
-
-		Amber_Transform parent_inv = amber_invertTransform(src_pose_ptr->transforms[parent]);
-		dst_pose_ptr->transforms[i] = amber_mulTransform(parent_inv, src_pose_ptr->transforms[i]);
+			dst_pose_ptr->transforms[i] = src_pose_ptr->transforms[i];
+		else
+			dst_pose_ptr->transforms[i] = amber_mulTransform(amber_invertTransform(src_pose_ptr->transforms[parent]), src_pose_ptr->transforms[i]);
 	}
 
 	return AMBER_SUCCESS;
