@@ -144,6 +144,8 @@ typedef Amber_Result (*PFN_amberDestroySequence)(Amber_Instance instance, Amber_
 typedef Amber_Result (*PFN_amberDestroyInstance)(Amber_Instance instance);
 
 typedef Amber_Result (*PFN_amberCopyPose)(Amber_Instance instance, Amber_Pose src_pose, Amber_Pose dst_pose);
+typedef Amber_Result (*PFN_amberMultiplyPose)(Amber_Instance instance, Amber_Pose src_pose_a, Amber_Pose src_pose_b, Amber_Pose dst_pose);
+typedef Amber_Result (*PFN_amberInvertPose)(Amber_Instance instance, Amber_Pose src_pose, Amber_Pose dst_pose);
 typedef Amber_Result (*PFN_amberMapPose)(Amber_Instance instance, Amber_Pose pose, Amber_Transform **transforms);
 typedef Amber_Result (*PFN_amberUnmapPose)(Amber_Instance instance, Amber_Pose pose);
 typedef Amber_Result (*PFN_amberSamplePose)(Amber_Instance instance, Amber_Sequence sequence, float time, Amber_Pose dst_pose);
@@ -167,6 +169,8 @@ typedef struct Amber_InstanceTable_t
 	PFN_amberDestroyInstance destroyInstance;
 
 	PFN_amberCopyPose copyPose;
+	PFN_amberMultiplyPose multiplyPose;
+	PFN_amberInvertPose invertPose;
 	PFN_amberMapPose mapPose;
 	PFN_amberUnmapPose unmapPose;
 	PFN_amberSamplePose samplePose;
@@ -194,6 +198,8 @@ AMBER_APIENTRY Amber_Result amberDestroySequence(Amber_Instance instance, Amber_
 AMBER_APIENTRY Amber_Result amberDestroyInstance(Amber_Instance instance);
 
 AMBER_APIENTRY Amber_Result amberCopyPose(Amber_Instance instance, Amber_Pose src_pose, Amber_Pose dst_pose);
+AMBER_APIENTRY Amber_Result amberMultiplyPose(Amber_Instance instance, Amber_Pose src_pose_a, Amber_Pose src_pose_b, Amber_Pose dst_pose);
+AMBER_APIENTRY Amber_Result amberInvertPose(Amber_Instance instance, Amber_Pose src_pose, Amber_Pose dst_pose);
 AMBER_APIENTRY Amber_Result amberMapPose(Amber_Instance instance, Amber_Pose pose, Amber_Transform **transforms);
 AMBER_APIENTRY Amber_Result amberUnmapPose(Amber_Instance instance, Amber_Pose pose);
 AMBER_APIENTRY Amber_Result amberSamplePose(Amber_Instance instance, Amber_Sequence sequence, float time, Amber_Pose dst_pose);

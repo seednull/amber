@@ -617,6 +617,68 @@ Amber_Result impl_instanceCopyPose(Amber_Instance this, Amber_Pose src_pose, Amb
 	return AMBER_SUCCESS;
 }
 
+Amber_Result impl_instanceMultiplyPose(Amber_Instance this, Amber_Pose src_pose_a, Amber_Pose src_pose_b, Amber_Pose dst_pose)
+{
+	assert(this);
+	assert(src_pose_a);
+	assert(src_pose_b);
+	assert(dst_pose);
+
+	Impl_Instance *instance_ptr = (Impl_Instance *)this;
+	Impl_Pose *src_pose_a_ptr = (Impl_Pose *)amber_poolGetElement(&instance_ptr->poses, (Amber_PoolHandle)src_pose_a);
+	assert(src_pose_a_ptr);
+	assert(src_pose_a_ptr->transforms);
+
+	Impl_Pose *src_pose_b_ptr = (Impl_Pose *)amber_poolGetElement(&instance_ptr->poses, (Amber_PoolHandle)src_pose_b);
+	assert(src_pose_b_ptr);
+	assert(src_pose_b_ptr->transforms);
+
+	Impl_Pose *dst_pose_ptr = (Impl_Pose *)amber_poolGetElement(&instance_ptr->poses, (Amber_PoolHandle)dst_pose);
+	assert(dst_pose_ptr);
+	assert(dst_pose_ptr->transforms);
+
+	assert(src_pose_a_ptr->armature == dst_pose_ptr->armature);
+	assert(src_pose_b_ptr->armature == dst_pose_ptr->armature);
+
+	Impl_Armature *armature_ptr = (Impl_Armature *)amber_poolGetElement(&instance_ptr->armatures, (Amber_PoolHandle)dst_pose_ptr->armature);
+	assert(armature_ptr);
+	assert(armature_ptr->joint_count > 0);
+	assert(armature_ptr->joint_parents);
+
+	for (uint32_t i = 0; i < armature_ptr->joint_count; ++i)
+		dst_pose_ptr->transforms[i] = amber_mulTransform(src_pose_a_ptr->transforms[i], src_pose_b_ptr->transforms[i]);
+
+	return AMBER_SUCCESS;
+}
+
+Amber_Result impl_instanceInvertPose(Amber_Instance this, Amber_Pose src_pose, Amber_Pose dst_pose)
+{
+	assert(this);
+	assert(src_pose);
+	assert(dst_pose);
+
+	Impl_Instance *instance_ptr = (Impl_Instance *)this;
+	Impl_Pose *src_pose_ptr = (Impl_Pose *)amber_poolGetElement(&instance_ptr->poses, (Amber_PoolHandle)src_pose);
+	assert(src_pose_ptr);
+	assert(src_pose_ptr->transforms);
+
+	Impl_Pose *dst_pose_ptr = (Impl_Pose *)amber_poolGetElement(&instance_ptr->poses, (Amber_PoolHandle)dst_pose);
+	assert(dst_pose_ptr);
+	assert(dst_pose_ptr->transforms);
+
+	assert(src_pose_ptr->armature == dst_pose_ptr->armature);
+
+	Impl_Armature *armature_ptr = (Impl_Armature *)amber_poolGetElement(&instance_ptr->armatures, (Amber_PoolHandle)src_pose_ptr->armature);
+	assert(armature_ptr);
+	assert(armature_ptr->joint_count > 0);
+	assert(armature_ptr->joint_parents);
+
+	for (uint32_t i = 0; i < armature_ptr->joint_count; ++i)
+		dst_pose_ptr->transforms[i] = amber_invertTransform(src_pose_ptr->transforms[i]);
+
+	return AMBER_SUCCESS;
+}
+
 Amber_Result impl_instanceMapPose(Amber_Instance this, Amber_Pose pose, Amber_Transform **transforms)
 {
 	assert(this);
@@ -972,6 +1034,8 @@ static Amber_InstanceTable instance_vtbl =
 	impl_instanceDestroy,
 
 	impl_instanceCopyPose,
+	impl_instanceMultiplyPose,
+	impl_instanceInvertPose,
 	impl_instanceMapPose,
 	impl_instanceUnmapPose,
 	impl_instanceSamplePose,

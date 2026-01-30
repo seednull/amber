@@ -130,6 +130,30 @@ Amber_Result amberCopyPose(Amber_Instance instance, Amber_Pose src_pose, Amber_P
 	return ptr->vtbl->copyPose(instance, src_pose, dst_pose);
 }
 
+Amber_Result amberMultiplyPose(Amber_Instance instance, Amber_Pose src_pose_a, Amber_Pose src_pose_b, Amber_Pose dst_pose)
+{
+	if (instance == AMBER_NULL_HANDLE)
+		return AMBER_INVALID_INSTANCE;
+
+	Amber_InstanceInternal *ptr = (Amber_InstanceInternal *)instance;
+	assert(ptr->vtbl);
+	assert(ptr->vtbl->multiplyPose);
+
+	return ptr->vtbl->multiplyPose(instance, src_pose_a, src_pose_b, dst_pose);
+}
+
+Amber_Result amberInvertPose(Amber_Instance instance, Amber_Pose src_pose, Amber_Pose dst_pose)
+{
+	if (instance == AMBER_NULL_HANDLE)
+		return AMBER_INVALID_INSTANCE;
+
+	Amber_InstanceInternal *ptr = (Amber_InstanceInternal *)instance;
+	assert(ptr->vtbl);
+	assert(ptr->vtbl->invertPose);
+
+	return ptr->vtbl->invertPose(instance, src_pose, dst_pose);
+}
+
 Amber_Result amberMapPose(Amber_Instance instance, Amber_Pose pose, Amber_Transform **transforms)
 {
 	if (instance == AMBER_NULL_HANDLE)
