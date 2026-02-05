@@ -45,6 +45,7 @@ typedef struct Impl_Sequence_t
 	uint32_t joint_count;
 	uint32_t *joint_indices;
 	Impl_SequenceJointCurve *joint_curves;
+	Impl_SequenceJointCurve *root_motion_curve;
 	float min_time;
 	float max_time;
 } Impl_Sequence;

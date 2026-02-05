@@ -131,6 +131,7 @@ typedef struct Amber_SequenceDesc_t
 	uint32_t joint_count;
 	const uint32_t *joint_indices;
 	const Amber_SequenceJointCurve *joint_curves;
+	const Amber_SequenceJointCurve *root_motion_curve;
 } Amber_SequenceDesc;
 
 // Function pointers
@@ -148,6 +149,8 @@ typedef Amber_Result (*PFN_amberMultiplyPose)(Amber_Instance instance, Amber_Pos
 typedef Amber_Result (*PFN_amberInvertPose)(Amber_Instance instance, Amber_Pose src_pose, Amber_Pose dst_pose);
 typedef Amber_Result (*PFN_amberMapPose)(Amber_Instance instance, Amber_Pose pose, Amber_Transform **transforms);
 typedef Amber_Result (*PFN_amberUnmapPose)(Amber_Instance instance, Amber_Pose pose);
+
+typedef Amber_Result (*PFN_amberSampleRootMotion)(Amber_Instance instance, Amber_Sequence sequence, float prev_time, float time, Amber_Transform *dst_transform);
 typedef Amber_Result (*PFN_amberSamplePose)(Amber_Instance instance, Amber_Sequence sequence, float time, Amber_Pose dst_pose);
 
 typedef Amber_Result (*PFN_amberBlendPoses)(Amber_Instance instance, uint32_t src_pose_count, const Amber_Pose *src_poses, const float *src_weights, Amber_Pose dst_pose);
@@ -173,6 +176,8 @@ typedef struct Amber_InstanceTable_t
 	PFN_amberInvertPose invertPose;
 	PFN_amberMapPose mapPose;
 	PFN_amberUnmapPose unmapPose;
+
+	PFN_amberSampleRootMotion sampleRootMotion;
 	PFN_amberSamplePose samplePose;
 
 	PFN_amberBlendPoses blendPoses;
@@ -202,6 +207,8 @@ AMBER_APIENTRY Amber_Result amberMultiplyPose(Amber_Instance instance, Amber_Pos
 AMBER_APIENTRY Amber_Result amberInvertPose(Amber_Instance instance, Amber_Pose src_pose, Amber_Pose dst_pose);
 AMBER_APIENTRY Amber_Result amberMapPose(Amber_Instance instance, Amber_Pose pose, Amber_Transform **transforms);
 AMBER_APIENTRY Amber_Result amberUnmapPose(Amber_Instance instance, Amber_Pose pose);
+
+AMBER_APIENTRY Amber_Result amberSampleRootMotion(Amber_Instance instance, Amber_Sequence sequence, float prev_time, float time, Amber_Transform *dst_transform);
 AMBER_APIENTRY Amber_Result amberSamplePose(Amber_Instance instance, Amber_Sequence sequence, float time, Amber_Pose dst_pose);
 
 AMBER_APIENTRY Amber_Result amberBlendPoses(Amber_Instance instance, uint32_t src_pose_count, const Amber_Pose *src_poses, const float *src_weights, Amber_Pose dst_pose);

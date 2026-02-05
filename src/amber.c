@@ -178,6 +178,18 @@ Amber_Result amberUnmapPose(Amber_Instance instance, Amber_Pose pose)
 	return ptr->vtbl->unmapPose(instance, pose);
 }
 
+Amber_Result amberSampleRootMotion(Amber_Instance instance, Amber_Sequence sequence, float prev_time, float time, Amber_Transform *dst_transform)
+{
+	if (instance == AMBER_NULL_HANDLE)
+		return AMBER_INVALID_INSTANCE;
+
+	Amber_InstanceInternal *ptr = (Amber_InstanceInternal *)instance;
+	assert(ptr->vtbl);
+	assert(ptr->vtbl->sampleRootMotion);
+
+	return ptr->vtbl->sampleRootMotion(instance, sequence, prev_time, time, dst_transform);
+}
+
 Amber_Result amberSamplePose(Amber_Instance instance, Amber_Sequence sequence, float time, Amber_Pose dst_pose)
 {
 	if (instance == AMBER_NULL_HANDLE)
