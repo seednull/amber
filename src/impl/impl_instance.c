@@ -255,6 +255,61 @@ static AMBER_INLINE float amber_fetchCurveValue(const Impl_SequenceCurve *curve,
 	return 0.0f;
 }
 
+static AMBER_INLINE Amber_Transform amber_fetchJointTransform(const Impl_SequenceJointCurve *joint_curve, float time)
+{
+	assert(joint_curve);
+
+	Amber_Transform result = (Amber_Transform)
+	{
+		0.0f, 0.0f, 0.0f,
+		0.0f, 0.0f, 0.0f, 1.0f,
+		1.0f, 1.0f, 1.0f,
+	};
+
+	const Impl_SequenceCurve *src_curves[10] =
+	{
+		&joint_curve->position_curves[0],
+		&joint_curve->position_curves[1],
+		&joint_curve->position_curves[2],
+
+		&joint_curve->rotation_curves[0],
+		&joint_curve->rotation_curves[1],
+		&joint_curve->rotation_curves[2],
+		&joint_curve->rotation_curves[3],
+
+		&joint_curve->scale_curves[0],
+		&joint_curve->scale_curves[1],
+		&joint_curve->scale_curves[2],
+	};
+
+	float *dst_values[10] =
+	{
+		&result.position.x,
+		&result.position.y,
+		&result.position.z,
+
+		&result.rotation.x,
+		&result.rotation.y,
+		&result.rotation.z,
+		&result.rotation.w,
+
+		&result.scale.x,
+		&result.scale.y,
+		&result.scale.z,
+	};
+
+	for (uint32_t j = 0; j < 10; ++j)
+	{
+		const Impl_SequenceCurve *curve = src_curves[j];
+		if (curve->key_count == 0)
+			continue;
+
+		*dst_values[j] = amber_fetchCurveValue(curve, time);
+	}
+
+	return result;
+}
+
 /*
  */
 static void impl_destroyArmature(Impl_Instance *instance_ptr, Impl_Armature *armature_ptr)
@@ -427,11 +482,14 @@ Amber_Result impl_instanceCreateSequence(Amber_Instance this, const Amber_Sequen
 
 	Impl_SequenceJointCurve *root_motion_curve = NULL;
 	
-	float min_time = FLT_MAX;
-	float max_time = -FLT_MAX;
+	float sequence_min_time = FLT_MAX;
+	float sequence_max_time = -FLT_MAX;
 
 	for (uint32_t i = 0; i < desc->joint_count; ++i)
 	{
+		float curve_min_time = FLT_MAX;
+		float curve_max_time = -FLT_MAX;
+
 		const Amber_SequenceJointCurve *src_joint_curve = &desc->joint_curves[i];
 		Impl_SequenceJointCurve *dst_joint_curve = &joint_curves[i];
 
@@ -483,14 +541,23 @@ Amber_Result impl_instanceCreateSequence(Amber_Instance this, const Amber_Sequen
 				dst_curve->keys[k] = src_curve->keys[k];
 
 				float time = src_curve->keys[k].time;
-				min_time = amber_floatMin(min_time, time);
-				max_time = amber_floatMax(max_time, time);
+				sequence_min_time = amber_floatMin(sequence_min_time, time);
+				sequence_max_time = amber_floatMax(sequence_max_time, time);
+
+				curve_min_time = amber_floatMin(curve_min_time, time);
+				curve_max_time = amber_floatMax(curve_max_time, time);
 			}
 		}
+
+		dst_joint_curve->min_time = curve_min_time;
+		dst_joint_curve->max_time = curve_max_time;
 	}
 
 	if (desc->root_motion_curve)
 	{
+		float curve_min_time = FLT_MAX;
+		float curve_max_time = -FLT_MAX;
+
 		root_motion_curve = (Impl_SequenceJointCurve *)malloc(sizeof(Impl_SequenceJointCurve));
 		memset(root_motion_curve, 0, sizeof(Impl_SequenceJointCurve));
 
@@ -544,10 +611,16 @@ Amber_Result impl_instanceCreateSequence(Amber_Instance this, const Amber_Sequen
 				dst_curve->keys[k] = src_curve->keys[k];
 
 				float time = src_curve->keys[k].time;
-				min_time = amber_floatMin(min_time, time);
-				max_time = amber_floatMax(max_time, time);
+				sequence_min_time = amber_floatMin(sequence_min_time, time);
+				sequence_max_time = amber_floatMax(sequence_max_time, time);
+
+				curve_min_time = amber_floatMin(curve_min_time, time);
+				curve_max_time = amber_floatMax(curve_max_time, time);
 			}
 		}
+
+		root_motion_curve->min_time = curve_min_time;
+		root_motion_curve->max_time = curve_max_time;
 	}
 
 	Impl_Sequence result = {0};
@@ -556,8 +629,8 @@ Amber_Result impl_instanceCreateSequence(Amber_Instance this, const Amber_Sequen
 	result.joint_indices = joint_indices;
 	result.joint_curves = joint_curves;
 	result.root_motion_curve = root_motion_curve;
-	result.min_time = min_time;
-	result.max_time = max_time;
+	result.min_time = sequence_min_time;
+	result.max_time = sequence_max_time;
 
 	*sequence = (Amber_Sequence)amber_poolAddElement(&instance_ptr->sequences, &result);
 	return AMBER_SUCCESS;
@@ -811,62 +884,32 @@ Amber_Result impl_instanceSampleRootMotion(Amber_Instance this, Amber_Sequence s
 	{
 		const Impl_SequenceJointCurve *root_motion_curve = sequence_ptr->root_motion_curve;
 
-		const Impl_SequenceCurve *src_curves[10] =
-		{
-			&root_motion_curve->position_curves[0],
-			&root_motion_curve->position_curves[1],
-			&root_motion_curve->position_curves[2],
-
-			&root_motion_curve->rotation_curves[0],
-			&root_motion_curve->rotation_curves[1],
-			&root_motion_curve->rotation_curves[2],
-			&root_motion_curve->rotation_curves[3],
-
-			&root_motion_curve->scale_curves[0],
-			&root_motion_curve->scale_curves[1],
-			&root_motion_curve->scale_curves[2],
-		};
-
-		float *dst_values[10] =
-		{
-			&result.position.x,
-			&result.position.y,
-			&result.position.z,
-
-			&result.rotation.x,
-			&result.rotation.y,
-			&result.rotation.z,
-			&result.rotation.w,
-
-			&result.scale.x,
-			&result.scale.y,
-			&result.scale.z,
-		};
+		Amber_Transform transform = amber_fetchJointTransform(root_motion_curve, time);
+		Amber_Transform prev_transform = amber_fetchJointTransform(root_motion_curve, prev_time);
 
 		if (prev_time < time)
 		{
-			for (uint32_t j = 0; j < 10; ++j)
-			{
-				const Impl_SequenceCurve *curve = src_curves[j];
-				if (curve->key_count == 0)
-					continue;
-
-				*dst_values[j] = amber_fetchCurveValue(curve, time) - amber_fetchCurveValue(curve, prev_time);
-			}
+			result.position = amber_vec3Sub(transform.position, prev_transform.position);
+			result.rotation = amber_quatMul(amber_quatConjugate(prev_transform.rotation), transform.rotation);
+			result.scale = amber_vec3Div(transform.scale, prev_transform.scale);
 		}
 		else
 		{
-			for (uint32_t j = 0; j < 10; ++j)
-			{
-				const Impl_SequenceCurve *curve = src_curves[j];
-				if (curve->key_count == 0)
-					continue;
+			Amber_Transform first_transform = amber_fetchJointTransform(root_motion_curve, root_motion_curve->min_time);
+			Amber_Transform last_transform = amber_fetchJointTransform(root_motion_curve, root_motion_curve->max_time);
 
-				float first = curve->keys[0].value;
-				float last = curve->keys[curve->key_count - 1].value;
+			Amber_Transform temp_transform = {};
+			temp_transform.position = amber_vec3Sub(last_transform.position, prev_transform.position);
+			temp_transform.rotation = amber_quatMul(amber_quatConjugate(prev_transform.rotation), last_transform.rotation);
+			temp_transform.scale = amber_vec3Div(last_transform.scale, prev_transform.scale);
 
-				*dst_values[j] = last - amber_fetchCurveValue(curve, prev_time) + amber_fetchCurveValue(curve, time) - first;
-			}
+			result.position = amber_vec3Sub(transform.position, first_transform.position);
+			result.rotation = amber_quatMul(amber_quatConjugate(first_transform.rotation), transform.rotation);
+			result.scale = amber_vec3Div(transform.scale, first_transform.scale);
+
+			result.position = amber_vec3Add(result.position, temp_transform.position);
+			result.rotation = amber_quatMul(result.rotation, temp_transform.rotation);
+			result.scale = amber_vec3Mul(result.scale, temp_transform.scale);
 		}
 	};
 
@@ -896,16 +939,6 @@ Amber_Result impl_instanceSamplePose(Amber_Instance this, Amber_Sequence sequenc
 	assert(dst_armature_ptr->joint_count > 0);
 	assert(dst_armature_ptr->joint_parents);
 
-	for (uint32_t i = 0; i < dst_armature_ptr->joint_count; ++i)
-	{
-		dst_pose_ptr->transforms[i] = (Amber_Transform)
-		{
-			0.0f, 0.0f, 0.0f,
-			0.0f, 0.0f, 0.0f, 1.0f,
-			1.0f, 1.0f, 1.0f,
-		};
-	}
-
 	for (uint32_t i = 0; i < sequence_ptr->joint_count; ++i)
 	{
 		uint32_t index = sequence_ptr->joint_indices[i];
@@ -914,47 +947,7 @@ Amber_Result impl_instanceSamplePose(Amber_Instance this, Amber_Sequence sequenc
 		const Impl_SequenceJointCurve *src_joint_curve = &sequence_ptr->joint_curves[i];
 		assert(src_joint_curve);
 
-		Amber_Transform *dst_joint_transform = &dst_pose_ptr->transforms[index];
-
-		const Impl_SequenceCurve *src_curves[10] =
-		{
-			&src_joint_curve->position_curves[0],
-			&src_joint_curve->position_curves[1],
-			&src_joint_curve->position_curves[2],
-
-			&src_joint_curve->rotation_curves[0],
-			&src_joint_curve->rotation_curves[1],
-			&src_joint_curve->rotation_curves[2],
-			&src_joint_curve->rotation_curves[3],
-
-			&src_joint_curve->scale_curves[0],
-			&src_joint_curve->scale_curves[1],
-			&src_joint_curve->scale_curves[2],
-		};
-
-		float *dst_values[10] =
-		{
-			&dst_joint_transform->position.x,
-			&dst_joint_transform->position.y,
-			&dst_joint_transform->position.z,
-
-			&dst_joint_transform->rotation.x,
-			&dst_joint_transform->rotation.y,
-			&dst_joint_transform->rotation.z,
-			&dst_joint_transform->rotation.w,
-
-			&dst_joint_transform->scale.x,
-			&dst_joint_transform->scale.y,
-			&dst_joint_transform->scale.z,
-		};
-
-		for (uint32_t j = 0; j < 10; ++j)
-		{
-			if (src_curves[j]->key_count == 0)
-				continue;
-
-			*dst_values[j] = amber_fetchCurveValue(src_curves[j], time);
-		}
+		dst_pose_ptr->transforms[index] = amber_fetchJointTransform(src_joint_curve, time);
 	}
 
 	return AMBER_SUCCESS;

@@ -37,6 +37,8 @@ typedef struct Impl_SequenceJointCurve_t
 	Impl_SequenceCurve position_curves[3];
 	Impl_SequenceCurve rotation_curves[4];
 	Impl_SequenceCurve scale_curves[3];
+	float min_time;
+	float max_time;
 } Impl_SequenceJointCurve;
 
 typedef struct Impl_Sequence_t
