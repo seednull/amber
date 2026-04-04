@@ -898,7 +898,7 @@ Amber_Result impl_instanceSampleRootMotion(Amber_Instance this, Amber_Sequence s
 			Amber_Transform first_transform = amber_fetchJointTransform(root_motion_curve, root_motion_curve->min_time);
 			Amber_Transform last_transform = amber_fetchJointTransform(root_motion_curve, root_motion_curve->max_time);
 
-			Amber_Transform temp_transform = {};
+			Amber_Transform temp_transform = {0};
 			temp_transform.position = amber_vec3Sub(last_transform.position, prev_transform.position);
 			temp_transform.rotation = amber_quatMul(amber_quatConjugate(prev_transform.rotation), last_transform.rotation);
 			temp_transform.scale = amber_vec3Div(last_transform.scale, prev_transform.scale);
